@@ -29,3 +29,23 @@ export const userRegisterValidator = ()=>{
             .withMessage("Invalid user Type")
     ];
 }
+export const userLoginValidator = ()=>{
+    return [
+        body("email")
+            .trim()
+            .notEmpty()
+            .withMessage("Email is required")
+            .isEmail()
+            .withMessage("Please enter a valid email id"),
+        body("password")
+            .trim()
+            .notEmpty()
+            .withMessage("Password is required"),
+        body("userType")
+            .trim()
+            .notEmpty()
+            .withMessage("UserType is required")
+            .isIn(AvailableUserTypes)
+            .withMessage("Invalid user Type")
+    ];
+}

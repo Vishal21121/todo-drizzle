@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "../../drizzle/schema/user";
 import bcrypt from "bcrypt"
-import {userRegisterValidator} from "../validators/user.validator"
+import {userRegisterValidator,userLoginValidator} from "../validators/user.validator"
 import { validation } from "../middleware/validate.middleware";
 
 
@@ -64,6 +64,60 @@ router.post("/register",userRegisterValidator(),validation, async(req:express.Re
           },
         });
     }
+})
+
+router.post("/login",userLoginValidator(),validation,async(req:express.Request,res:express.Response)=>{
+  const { email, password, userType } = req.body;
+  try {
+    const userFound = await db.query.users.findFirst(email)
+    if(!userFound){
+      return res.status(401).json({
+        success:false,
+        data:{
+          statusCode: 401,
+          message:"Please enter correct credentials"
+        }
+      })
+    }
+    const isPasswordCorrect = await bcrypt.compare(password,userFound.password)
+    if(!isPasswordCorrect){
+      return res.status(401).json({
+        success: false,
+        data: {
+          statusCode: 401,
+          message: "Please enter correct credentials",
+        },
+      });
+    }
+    if(userType !== userFound.userType){
+      return res.status(401).json({
+        success: false,
+        data: {
+          statusCode: 401,
+          message: "Please enter with proper user type",
+        },
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: {
+        statusCode: 200,
+        value: {
+          email:userFound.email,
+          username: userFound.username,
+          id: userFound.id
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      data: {
+        statusCode: 500,
+        message: error || "Internal server error",
+      },
+    });
+  }
 })
 
 export default router
